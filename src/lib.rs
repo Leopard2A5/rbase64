@@ -5,11 +5,11 @@ mod characters;
 use std::io::{Read, BufReader, Error};
 use characters::{CHARS, VALUES_BY_CHAR};
 
-pub fn encode<I: Read>(input: I) -> Result<String, Error> {
+pub fn encode<I: Read>(input: I) -> Result<Vec<u8>, Error> {
     let mut reader = BufReader::new(input);
 
     let mut buf = [0u8; 3];
-    let mut result = String::new();
+    let mut result: Vec<u8> = vec![];
 
     loop {
         buf.fill(0);
@@ -20,28 +20,28 @@ pub fn encode<I: Read>(input: I) -> Result<String, Error> {
         }
 
         let sextet0 = buf[0] >> 2;
-        result.push(CHARS[sextet0 as usize]);
+        result.push(CHARS[sextet0 as usize] as u8);
 
         let sextet1 = buf[1] >> 4;
         let sextet1 = sextet1 + ((buf[0] & 0b00000011) << 4);
-        result.push(CHARS[sextet1 as usize]);
+        result.push(CHARS[sextet1 as usize] as u8);
 
         if read > 1 {
             let part1 = (buf[1] & 0b00001111) << 2;
             let part2 = buf[2] >> 6;
             let sextet2 = part1 + part2;
-            result.push(CHARS[sextet2 as usize]);
+            result.push(CHARS[sextet2 as usize] as u8);
         }
         if read > 2 {
             let sextet3 = buf[2] & 0b00111111;
-            result.push(CHARS[sextet3 as usize]);
+            result.push(CHARS[sextet3 as usize] as u8);
         }
 
         if read < 3 {
-            result.push('=');
+            result.push('=' as u8);
         }
         if read < 2 {
-            result.push('=');
+            result.push('=' as u8);
         }
 
         if read < 3 {
@@ -111,10 +111,10 @@ mod encode {
 
     #[test]
     fn should_encode_correctly() -> Result<(), Error> {
-        assert_eq!(encode("".as_bytes())?,    "");
-        assert_eq!(encode("Man".as_bytes())?, "TWFu");
-        assert_eq!(encode("Ma".as_bytes())?,  "TWE=");
-        assert_eq!(encode("M".as_bytes())?,   "TQ==");
+        assert_eq!(encode("".as_bytes())?,    "".as_bytes());
+        assert_eq!(encode("Man".as_bytes())?, "TWFu".as_bytes());
+        assert_eq!(encode("Ma".as_bytes())?,  "TWE=".as_bytes());
+        assert_eq!(encode("M".as_bytes())?,   "TQ==".as_bytes());
 
         Ok(())
     }
